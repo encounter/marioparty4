@@ -50,7 +50,7 @@ SHARED_SYM s32 SystemInitF;
 
 #ifdef TARGET_PC
 #include <stdio.h>
-void aurora_log_callback(AuroraLogLevel level, const char *message, unsigned int len)
+void aurora_log_callback(AuroraLogLevel level, const char* module, const char *message, unsigned int len)
 {
     const char *levelStr = "??";
     FILE *out = stdout;
@@ -73,7 +73,7 @@ void aurora_log_callback(AuroraLogLevel level, const char *message, unsigned int
             out = stderr;
             break;
     }
-    fprintf(out, "[%s: %s]\n", levelStr, message);
+    fprintf(out, "[%s | %s] %s\n", levelStr, module, message);
     if (level == LOG_FATAL) {
         fflush(out);
         abort();
@@ -92,6 +92,11 @@ void main(void)
         &(AuroraConfig) {
             .appName = "Mario Party 4",
             .logCallback = &aurora_log_callback,
+            .desiredBackend = BACKEND_VULKAN,
+            .windowPosX = 100,
+            .windowPosY = 100,
+            .windowWidth = 640,
+            .windowHeight = 480,
         });
 #endif
     u32 met0;
@@ -182,11 +187,6 @@ void main(void)
         pfDrawFonts();
         HuPerfEnd(1);
 
-#ifdef TARGET_PC
-        imgui_main(&auroraInfo);
-        aurora_end_frame();
-#endif
-
         msmMusFdoutEnd();
         HuSysDoneRender(retrace);
         GXReadGPMetric(&met0, &met1);
@@ -197,6 +197,8 @@ void main(void)
         GlobalCounter++;
 
 #ifdef TARGET_PC
+        imgui_main(&auroraInfo);
+        aurora_end_frame();
         frame_limiter();
 #endif
     }
